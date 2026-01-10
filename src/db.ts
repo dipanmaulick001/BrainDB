@@ -1,6 +1,8 @@
 import mongoose, { mongo, Types } from "mongoose";
 
-mongoose.connect("");
+import { MONGO_URL } from "./config.js";
+
+mongoose.connect(MONGO_URL);
 //schemas and models 
 
 const userSchema = new mongoose.Schema({
