@@ -34,15 +34,14 @@ app.post("/api/v1/signup" , async (req , res)=>{
     const parsed = requiredBody.safeParse(req.body);
 
     if(!parsed.success){
-        res.status(400).json({
+         return res.status(400).json({
             message : "input validation failed",
             errors : parsed.error.issues
         })
     }
     //if validation succeeds
 
-    const username = req.body.username;
-    const password = req.body.password;
+    const {username, password} = req.body;
 
     const hashedPassword = await bcrypt.hash(password,10);
 
@@ -51,11 +50,11 @@ app.post("/api/v1/signup" , async (req , res)=>{
             username : username,
             password : hashedPassword //hash the password
     })
-        res.json({
+        return res.json({
         message : "User signed up"
     })
     }catch(e){
-        res.status(411).json({
+        return res.status(411).json({
             message : "user already exists"
         })
     }
@@ -65,15 +64,14 @@ app.post("/api/v1/signup" , async (req , res)=>{
 })
 
 app.post("/api/v1/login" , async ( req ,res) =>{
-    const username = req.body.username;
-    const password = req.body.password;
+    const {username , password} = req.body;
 
     const existingUser = await UserModel.findOne({
                 username
     })
 
     if(!existingUser){
-        res.status(403).json({
+        return res.status(403).json({
             message : "invalid credentials"
         })
     }
@@ -81,7 +79,7 @@ app.post("/api/v1/login" , async ( req ,res) =>{
     const passwordMatch = await bcrypt.compare(password , existingUser?.password as string );
 
     if(!passwordMatch){
-        res.status(403).json({
+        return res.status(403).json({
             message : "password doesnt match"
         })
     }
@@ -90,7 +88,7 @@ app.post("/api/v1/login" , async ( req ,res) =>{
         userId : existingUser?._id
     },JWT_SECRET);
 
-    res.json({
+    return res.json({
         token 
     })
     
@@ -109,7 +107,7 @@ app.post("/api/v1/content" ,userMiddleware ,async (req ,res)=>{
             title
         })
 
-        res.json({
+        return res.json({
             message : "content added"
         })
 })
@@ -121,7 +119,7 @@ app.get("/api/v1/content" , userMiddleware, async ( req ,res)=>{
         userId : userId
     }).populate("userId" , "username"); //just show the username
 
-    res.json({
+    return res.json({
         content
     })
     //we see the userId returned 
@@ -130,14 +128,14 @@ app.get("/api/v1/content" , userMiddleware, async ( req ,res)=>{
 app.delete("/api/v1/content" , userMiddleware ,async (req ,res)=>{
     const contentId = req.body.contentId;
 
-    await ContentModel.deleteMany({
-        contentId,
+    await ContentModel.deleteOne({ //deleteMany is too dangerous
+        _id : contentId,
         //@ts-ignore
         userId : req.userId
 
     })
 
-    res.json({
+    return res.json({
         message : "deleted"
     })
 
@@ -152,35 +150,34 @@ app.post("/api/v1/braindb/share" , userMiddleware,  async (req ,res)=>{
             {hash},
             {upsert : true, new : true}
         )
+        
+        if(!myLink){
+            res.status(500).json({
+                message : "could not generate link"
+            })
+        }
 
-        res.json({
+        return res.json({
             fullLink : `${req.protocol}://${req.get("host")}/share/${myLink.hash}`
         })
 })
 
 app.get("/api/v1/braindb/:sharedLink", async (req, res) => {
-  const hash = req.params.sharedLink;
+        const hash = req.params.sharedLink;
 
-  const linkDoc = await LinkModel.findOne({ hash });
-  if (!linkDoc || !linkDoc.userId) { //now ts knows linkDoc.userId exists
-    return res.status(404).json({ message: "Invalid or expired link" });
-  }
+        const linkDoc = await LinkModel.findOne({ hash });
+        if (!linkDoc || !linkDoc.userId) { //now ts knows linkDoc.userId exists
+            return res.status(404).json({ message: "Invalid or expired link" });
+        }
 
-  const contents = await ContentModel.find({ userId: linkDoc.userId }) 
-    .populate("tags" as any)
-    .select("title link type tags");
+        const contents = await ContentModel.find({ userId: linkDoc.userId }) 
+            .populate("tags")
+            .select("title link type tags");
 
-  return res.json({ contents });
+        return res.json({ contents });
 });
 
 
 app.listen(PORT, ()=>{
-    console.log("Listening to port ${PORT}")
+    console.log(`Listening to port ${PORT}`)
 });
-
-
-
-
-
-
-
