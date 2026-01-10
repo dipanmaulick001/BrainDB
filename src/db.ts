@@ -21,17 +21,17 @@ const contentTypes = ['image' , 'video' , 'documents' , 'article' , 'audio'];
 
 const contentSchema = new mongoose.Schema({
     link : {type : String , required : true},
-    tags : [{type : mongoose.Types.ObjectId , ref : TagModel}],
+    tags : [{type : mongoose.Schema.Types.ObjectId , ref : "tags"}],
     type : {type : String, required : true, enum : contentTypes },
     title : {type : String, required : true},
-    userId : [{type : Types.ObjectId , required : true , ref : UserModel}]
+    userId : {type : mongoose.Schema.Types.ObjectId , required : true , ref : "users"}
 })
 
 export const ContentModel = mongoose.model("contents" , contentSchema);
 
 const linkSchema = new mongoose.Schema({
     hash : {type : String , required : true},
-    userId : [{type : Types.ObjectId , ref : UserModel}]
+    userId : {type : mongoose.Schema.Types.ObjectId , ref : "users"}
 })
 
 export const LinkModel = mongoose.model("links" , linkSchema);
