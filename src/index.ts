@@ -7,11 +7,13 @@ import {UserModel} from "./db.js"
 import { ContentModel , TagModel , LinkModel} from "./db.js";
 import z from "zod";
 import bcrypt from "bcrypt";
+import crypto from "crypto"
 
-import mongoose from "mongoose";
+import mongoose, { type ObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 
-import {JWT_SECRET} from "./config.js"
+import {JWT_SECRET} from "./config.js";
+import { PORT } from "./config.js";
 import { userMiddleware } from "./middleware.js";
 
 app.post("/api/v1/signup" , async (req , res)=>{
@@ -141,15 +143,40 @@ app.delete("/api/v1/content" , userMiddleware ,async (req ,res)=>{
 
 })
 
-app.post("/api/v1/braindb/share" , (req ,res)=>{
+app.post("/api/v1/braindb/share" , userMiddleware,  async (req ,res)=>{
+        const hash = crypto.randomBytes(16).toString("hex");
 
+        const myLink = await LinkModel.findOneAndUpdate(
+            //@ts-ignore
+            {userId : req.userId},
+            {hash},
+            {upsert : true, new : true}
+        )
+
+        res.json({
+            fullLink : `${req.protocol}://${req.get("host")}/share/${myLink.hash}`
+        })
 })
 
-app.get("/api/v1/braindb/:sharedLink" , (req ,res)=>{
+app.get("/api/v1/braindb/:sharedLink", async (req, res) => {
+  const hash = req.params.sharedLink;
 
-})
+  const linkDoc = await LinkModel.findOne({ hash });
+  if (!linkDoc || !linkDoc.userId) { //now ts knows linkDoc.userId exists
+    return res.status(404).json({ message: "Invalid or expired link" });
+  }
 
-app.listen(3000);
+  const contents = await ContentModel.find({ userId: linkDoc.userId }) 
+    .populate("tags" as any)
+    .select("title link type tags");
+
+  return res.json({ contents });
+});
+
+
+app.listen(PORT, ()=>{
+    console.log("Listening to port ${PORT}")
+});
 
 
 
