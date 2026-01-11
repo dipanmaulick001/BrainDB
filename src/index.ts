@@ -94,16 +94,38 @@ app.post("/api/v1/login" , async ( req ,res) =>{
     
 })
 
+//tag endpoint
+app.post("/api/v1/tags" , userMiddleware, async (req ,res)=>{
+
+    const title = req.body.title;
+
+    if(!title){
+        return res.status(400).json({
+                message : "title required"
+        })
+    }
+
+    const tag = await TagModel.create({
+        title : title
+    })
+
+    return res.json({
+        tag
+    })
+})
+
+
+
 app.post("/api/v1/content" ,userMiddleware ,async (req ,res)=>{
     //userId from middleware
-        const {link ,  type , title} = req.body;
+        const {link ,  type , title ,tags} = req.body;
 
         await ContentModel.create({
             link,
             //@ts-ignore
             userId : req.userId,
             type,
-            tags : [],
+            tags ,
             title
         })
 
@@ -117,8 +139,10 @@ app.get("/api/v1/content" , userMiddleware, async ( req ,res)=>{
     const userId = req.userId;
     const content = await ContentModel.find({
         userId : userId
-    }).populate("userId" , "username"); //just show the username
-
+    })
+        .populate("userId" , "username") //only show username
+        .populate("tags" , "title") //show title of tags
+        
     return res.json({
         content
     })
