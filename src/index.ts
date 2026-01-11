@@ -58,9 +58,6 @@ app.post("/api/v1/signup" , async (req , res)=>{
             message : "user already exists"
         })
     }
-    
-
-    
 })
 
 app.post("/api/v1/login" , async ( req ,res) =>{
@@ -75,7 +72,7 @@ app.post("/api/v1/login" , async ( req ,res) =>{
             message : "invalid credentials"
         })
     }
-    //if we find the username, then we comapre passwords
+    //if we find the username, then we compare passwords
     const passwordMatch = await bcrypt.compare(password , existingUser?.password as string );
 
     if(!passwordMatch){
@@ -94,7 +91,7 @@ app.post("/api/v1/login" , async ( req ,res) =>{
     
 })
 
-//tag endpoint
+//tag endpoint : add tags
 app.post("/api/v1/tags" , userMiddleware, async (req ,res)=>{
 
     const title = req.body.title;
@@ -125,7 +122,7 @@ app.post("/api/v1/content" ,userMiddleware ,async (req ,res)=>{
             //@ts-ignore
             userId : req.userId,
             type,
-            tags ,
+            tags , //use tags
             title
         })
 
