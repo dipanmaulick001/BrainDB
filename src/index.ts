@@ -41,7 +41,7 @@ app.post("/api/v1/signup" , async (req , res)=>{
     }
     //if validation succeeds
 
-    const {username, password} = req.body;
+    const {username, password} = parsed.data; //parsed.data instead of req.body 
 
     const hashedPassword = await bcrypt.hash(password,10);
 
@@ -54,7 +54,7 @@ app.post("/api/v1/signup" , async (req , res)=>{
         message : "User signed up"
     })
     }catch(e){
-        return res.status(411).json({
+        return res.status(409).json({
             message : "user already exists"
         })
     }
@@ -80,7 +80,7 @@ app.post("/api/v1/login" , async ( req ,res) =>{
 
     if(!passwordMatch){
         return res.status(403).json({
-            message : "password doesnt match"
+            message : "invalid credentials"
         })
     }
 
@@ -152,13 +152,13 @@ app.post("/api/v1/braindb/share" , userMiddleware,  async (req ,res)=>{
         )
         
         if(!myLink){
-            res.status(500).json({
+            return res.status(500).json({
                 message : "could not generate link"
             })
         }
 
         return res.json({
-            fullLink : `${req.protocol}://${req.get("host")}/share/${myLink.hash}`
+            fullLink : `${req.protocol}://${req.get("host")}/api/v1/braindb/${myLink.hash}`
         })
 })
 
