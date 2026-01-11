@@ -17,7 +17,7 @@ const tagSchema = new mongoose.Schema({
 
 export const TagModel = mongoose.model("tags" , tagSchema);
 
-const contentTypes = ['image' , 'video' , 'documents' , 'article' , 'audio'];
+export const contentTypes = ['image' , 'video' , 'documents' , 'article' , 'audio'] as const
 
 const contentSchema = new mongoose.Schema({
     link : {type : String , required : true},
@@ -30,8 +30,8 @@ const contentSchema = new mongoose.Schema({
 export const ContentModel = mongoose.model("contents" , contentSchema);
 
 const linkSchema = new mongoose.Schema({
-    hash : {type : String , required : true},
-    userId : {type : mongoose.Schema.Types.ObjectId , ref : "users"}
+    hash : {type : String , required : true , unique : true},
+    userId : {type : mongoose.Schema.Types.ObjectId , ref : "users" , required : true , unique : true}
 })
 
 export const LinkModel = mongoose.model("links" , linkSchema);
