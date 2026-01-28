@@ -8,7 +8,7 @@ export const userMiddleware = (req : Request , res : Response , next : NextFunct
 
                 if(decoded){
                         //@ts-ignore
-                        req.userId = decoded.id;
+                        req.userId = decoded.userId;
                         next();
                 }else{
                         res.status(403).json({
